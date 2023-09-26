@@ -284,6 +284,12 @@ public interface RewriteTest extends SourceSpecs {
                 }
                 sourceFile = sourceFile.withMarkers(markers);
 
+                // Validate before source
+                TypeValidation typeValidation = testMethodSpec.getTypeValidation() != null ? testMethodSpec.getTypeValidation() : testClassSpec.getTypeValidation();
+                if (typeValidation == null || typeValidation.before()) {
+                    nextSpec.validateSource.accept(sourceFile, testMethodSpec, testClassSpec);
+                }
+
                 // Validate that printing a parsed AST yields the same source text
                 int j = 0;
                 for (Parser.Input input : inputs.values()) {
@@ -463,7 +469,7 @@ public interface RewriteTest extends SourceSpecs {
                                     expectedAfter :
                                     trimIndentPreserveCRLF(expectedAfter);
                             assertContentEquals(result.getAfter(), expected, actual, "Unexpected result in");
-                            sourceSpec.eachResult.accept(result.getAfter(), testMethodSpec, testClassSpec);
+                            sourceSpec.validateSource.accept(result.getAfter(), testMethodSpec, testClassSpec);
                         } else {
                             boolean isRemote = result.getAfter() instanceof Remote;
                             if (result.diff().isEmpty() && !isRemote) {
